@@ -1,0 +1,7 @@
+def solution(s):
+    colors = s.split()
+    positions = dict()
+    for color in colors:
+        positions.update({color[-1]:color[:-1]})
+    ns = ' '.join(positions.get(i) for i in sorted(positions.keys()))
+    return ns
