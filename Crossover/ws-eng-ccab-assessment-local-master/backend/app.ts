@@ -28,14 +28,21 @@ async function reset(account: string): Promise<void> {
 }
 
 async function charge(account: string, charges: number): Promise<ChargeResult> {
+    
     const client = await connect();
     try {
         const balance = parseInt((await client.get(`${account}/balance`)) ?? "");
+        if (charges == -1){
+            console.log('Charges not provided. Can\'t access the service');
+            return { isAuthorized: false, remainingBalance: balance, charges: 0 };
+        }
         if (balance >= charges) {
             await client.set(`${account}/balance`, balance - charges);
             const remainingBalance = parseInt((await client.get(`${account}/balance`)) ?? "");
+            console.log(`Successfully charged account ${account}`);
             return { isAuthorized: true, remainingBalance, charges };
         } else {
+            console.log(`Insufficient balance for account ${account}`);
             return { isAuthorized: false, remainingBalance: balance, charges: 0 };
         }
     } finally {
@@ -60,8 +67,7 @@ export function buildApp(): express.Application {
     app.post("/charge", async (req, res) => {
         try {
             const account = req.body.account ?? "account";
-            const result = await charge(account, req.body.charges ?? 10);
-            console.log(`Successfully charged account ${account}`);
+            const result = await charge(account, req.body.charges ?? -1);
             res.status(200).json(result);
         } catch (e) {
             console.error("Error while charging account", e);
